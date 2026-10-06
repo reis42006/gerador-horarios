@@ -1,0 +1,599 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.25.0",
+    "script_metadata_hash": "cdac4f193ea60f385129ed849f93ec6c"
+  },
+  "cells": [
+    {
+      "id": "setup",
+      "code_hash": "1d0db38904205bec4d6f6f6a1f6cec3e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Hbol",
+      "code_hash": "90c2e5d4d070442ac501ee4b301226d8",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"trabalho-pratico-gerador-automatico-de-horarios\">Trabalho Pr\u00e1tico: Gerador Autom\u00e1tico de Hor\u00e1rios</h1>\n<h2 id=\"contexto-e-modelacao-do-problema\">Contexto e Modela\u00e7\u00e3o do Problema</h2>\n<span class=\"paragraph\">O objetivo deste trabalho \u00e9 desenvolver um sistema automatizado para a gera\u00e7\u00e3o de hor\u00e1rios escolares. O problema consiste em atribuir aulas, turmas, professores e salas a tempos letivos (slots) ao longo da semana, garantindo que n\u00e3o existem conflitos de recursos.</span>\n<hr />\n<h2 id=\"1-carregar-os-dados\">1. Carregar os Dados</h2>\n<span class=\"paragraph\">Antes de come\u00e7armos a criar regras, precisamos de ler os ficheiros CSV que cont\u00eam toda a informa\u00e7\u00e3o base do problema:</span>\n<ul>\n<li>turmas.csv: Turmas da escola.</li>\n<li>disciplinas.csv: Disciplinas, quem as leciona, carga semanal, se \u00e9 de duplo periodo ou n\u00e3o e qual sala necess\u00e1ria para a disiciplina.</li>\n<li>salas.csv: Salas dispon\u00edveis, os seus tipos e a quantidade.</li>\n<li>disponibilidade_excecoes.csv: Dias e horas em que certos professores nao est\u00e3o disponiveis.</li>\n</ul></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "b223bcba0517538b69cb46f51ac58a38",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Dados carregados\nN\u00famero de turmas: 2\nN\u00famero de disciplinas: 6\nN\u00famero de salas: 3\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "vblA",
+      "code_hash": "492d134509c6685af1270aec1d4a1c52",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"2-preparar-o-modelo\">2. Preparar o Modelo</h2>\n<span class=\"paragraph\">Para resolver este problema, optou-se pela utiliza\u00e7\u00e3o do solver CP-SAT da biblioteca Google OR-Tools</span>\n<span class=\"paragraph\">Definimos tamb\u00e9m a dimens\u00e3o do tempo na escola:</span>\n<ul>\n<li>Dias da semana: 5 dias (segunda a sexta-feira).</li>\n<li>Blocos de tempo (slots ou periodos): 5 periodos por dia.</li>\n</ul></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "495331a65cb94ae0155f3a1432323481",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "ef60b76632bdcae9e8dd67ed4e506dc9",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"3-criacao-das-variaveis-de-decisao-x_t-d-s-dia-slot\">3. Cria\u00e7\u00e3o das Vari\u00e1veis de Decis\u00e3o (<marimo-tex class=\"arithmatex\">||(x_{t, d, s, dia, slot}||)</marimo-tex>)</h2>\n<span class=\"paragraph\">Para o computador conseguir decidir o hor\u00e1rio, precisamos de criar interruptores (vari\u00e1veis bin\u00e1rias) para cada combina\u00e7\u00e3o poss\u00edvel de turma, disciplina, sala, dia e hora.</span>\n<span class=\"paragraph\">Usamos vari\u00e1veis bin\u00e1rias <marimo-tex class=\"arithmatex\">||(x_{t, d, s, dia, slot} \\in \\{0, 1\\}||)</marimo-tex> com a seguinte l\u00f3gica:</span>\n<marimo-tex class=\"arithmatex\">||[x_{t, d, s, dia, slot} = 1 \\quad \\iff \\quad \\text{A turma } t \\text{ tem aula de } d \\text{ na sala } s, \\text{ no } dia \\text{ e } slot.||]</marimo-tex><span class=\"paragraph\">Se a vari\u00e1vel for 0, apenas significa que a aula em quest\u00e3o n\u00e3o acontece nesse momento e local.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "110e18782507083d4cba54bfabda9511",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "eab28748b81a03a44c97b0c0803e6113",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"4-restricao-r1-sem-sobreposicao-de-aulas-por-turma\">4. Restri\u00e7\u00e3o R1: Sem Sobreposi\u00e7\u00e3o de Aulas por Turma</h2>\n<span class=\"paragraph\">Uma regra fundamental para o hor\u00e1rio funcionar \u00e9 que uma turma n\u00e3o pode estar em dois s\u00edtios ao mesmo tempo.</span>\n<span class=\"paragraph\">Ou seja, para cada turma, em cada dia e em cada slot temporal, a soma de todas as aulas poss\u00edveis (independentemente da disciplina ou da sala) n\u00e3o pode ser superior a 1:</span>\n<marimo-tex class=\"arithmatex\">||[\\forall_{t \\in \\text{Turmas}}, \\, \\forall_{dia \\in \\text{DIAS}}, \\, \\forall_{slot \\in \\text{SLOTS}} \\cdot \\quad \\sum_{d, \\, s} x_{t, d, s, dia, slot} \\le 1||]</marimo-tex><span class=\"paragraph\">Isto afirma que a turma tem no m\u00e1ximo 1 aula por bloco de tempo (ou 0, caso esteja livre nesse bloco).</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "8b8d68771f9b2b83e68cea12d58fa4a0",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "79419b2df6ddf13bbf97a914201e1662",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"5-restricao-r2-cumprimento-da-carga-horaria-semanal\">5. Restri\u00e7\u00e3o R2: Cumprimento da Carga Hor\u00e1ria Semanal</h2>\n<span class=\"paragraph\">Cada disciplina tem um n\u00famero obrigat\u00f3rio de aulas por semana definido no ficheiro disciplinas.csv. O sistema precisa de garantir que n\u00e3o h\u00e1 aulas a mais ou em falta.</span>\n<span class=\"paragraph\">Para cada turma <marimo-tex class=\"arithmatex\">||(t||)</marimo-tex> e para cada disciplina <marimo-tex class=\"arithmatex\">||(d||)</marimo-tex>, a soma de todas as aloca\u00e7\u00f5es dessa disciplina ao longo de todos os dias, <em>slots</em> e salas tem de ser exatamente igual \u00e0 carga semanal exigida:</span>\n<marimo-tex class=\"arithmatex\">||[\\forall_{t \\in \\text{Turmas}}, \\, \\forall_{d \\in \\text{Disciplinas}} \\cdot \\quad \\sum_{s, \\, dia, \\, slot} x_{t, d, s, dia, slot} = \\text{CargaSemanal}_{d}||]</marimo-tex><span class=\"paragraph\">Garantindo, assim, que o plano de cada turma \u00e9 cumprido ao longo da semana.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "714f04735055be7a0a8e1a996557bc85",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "bb1bfd07bd5c2dc0d3053f419c654eb1",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"6-restricao-r3-limite-diario-de-aulas-por-disciplina\">6. Restri\u00e7\u00e3o R3: Limite Di\u00e1rio de Aulas por Disciplina</h2>\n<span class=\"paragraph\">Define-se que uma turma n\u00e3o deve ter mais do que 1 aula por dia da mesma disciplina.</span>\n<span class=\"paragraph\">A \u00fanica exce\u00e7\u00e3o aplica-se \u00e0s disciplinas marcadas como sendo de duplo per\u00edodo (bloco de 2 tempos seguidos), permitindo-se, nesses casos espec\u00edficos, at\u00e9 2 tempos no mesmo dia.</span>\n<span class=\"paragraph\">Definindo <marimo-tex class=\"arithmatex\">||(M_d \\in \\{1, 2\\}||)</marimo-tex> como o limite m\u00e1ximo de blocos di\u00e1rios permitido para a disciplina <marimo-tex class=\"arithmatex\">||(d||)</marimo-tex>:</span>\n<marimo-tex class=\"arithmatex\">||[\\forall_{t \\in \\text{Turmas}}, \\, \\forall_{d \\in \\text{Disciplinas}}, \\, \\forall_{dia \\in \\text{DIAS}} \\cdot \\quad \\sum_{s, \\, slot} x_{t, d, s, dia, slot} \\le M_d||]</marimo-tex></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "emfo",
+      "code_hash": "706b951767da62e08ba5d925f45dc7b3",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Hstk",
+      "code_hash": "45227948768d6482a17c96f7e172eea8",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"7-restricao-r4-disciplinas-de-duplo-periodo-tempos-consecutivos\">7.  Restri\u00e7\u00e3o R4: Disciplinas de Duplo Per\u00edodo (Tempos Consecutivos)</h2>\n<span class=\"paragraph\">Nas disciplinas assinaladas com duplo_periodo = sim, as aulas t\u00eam de ser dadas em blocos cont\u00ednuos de 2 tempos no mesmo dia.</span>\n<hr />\n<h3 id=\"1-mapeamento-das-aulas-has_aula\">1. Mapeamento das Aulas (has_aula)</h3>\n<span class=\"paragraph\">Para cada combina\u00e7\u00e3o de turma, disciplina, dia e slot, agregamos as salas numa vari\u00e1vel bin\u00e1ria que indica se h\u00e1 aula nesse bloco:</span>\n<marimo-tex class=\"arithmatex\">||[y_{t, d, dia, slot} = \\sum_{sala} x_{t, d, sala, dia, slot}||]</marimo-tex><ul>\n<li>has_aula = 1: Existe aula no slot (independentemente da sala).</li>\n<li>has_aula = 0: N\u00e3o h\u00e1 aula nesse slot.</li>\n</ul>\n<hr />\n<h3 id=\"2-obrigatoriedade-de-2-tempos-por-dia\">2. Obrigatoriedade de 2 Tempos por Dia</h3>\n<span class=\"paragraph\">Garante-se que a disciplina nunca \u00e9 dada em apenas 1 tempo isolado. Atrav\u00e9s de uma vari\u00e1vel bin\u00e1ria de ocorr\u00eancia di\u00e1ria (<marimo-tex class=\"arithmatex\">||(O \\in \\{0, 1\\}||)</marimo-tex>):</span>\n<ul>\n<li>Se a disciplina ocorre no dia: \u00c9 obrigat\u00f3rio ter exatamente 2 tempos.</li>\n<li>Se n\u00e3o ocorre: Tem 0 tempos.</li>\n</ul>\n<marimo-tex class=\"arithmatex\">||[\\sum_{slot} y_{t, d, dia, slot} = 2 \\cdot O_{t,d,dia}||]</marimo-tex><hr />\n<h3 id=\"3-conectividade-dos-tempos-adjacencia\">3. Conectividade dos Tempos (Adjac\u00eancia)</h3>\n<span class=\"paragraph\">Para garantir que os 2 tempos ficam colados, definem-se tr\u00eas regras importantes:</span>\n<ol>\n<li>\n<span class=\"paragraph\">In\u00edcio do dia (<marimo-tex class=\"arithmatex\">||(slot = 0||)</marimo-tex>): Se houver aula no 1\u00ba tempo, o 2\u00ba tempo \u00e9 obrigat\u00f3rio.</span>\n<marimo-tex class=\"arithmatex\">||[y_{slot_0} \\implies y_{slot_1}||]</marimo-tex></li>\n<li>\n<span class=\"paragraph\">Fim do dia (<marimo-tex class=\"arithmatex\">||(slot = 4||)</marimo-tex>): Se houver aula no \u00faltimo tempo, o pen\u00faltimo \u00e9 obrigat\u00f3rio.</span>\n<marimo-tex class=\"arithmatex\">||[y_{slot_4} \\implies y_{slot_3}||]</marimo-tex></li>\n<li>\n<span class=\"paragraph\">Meio do dia (<marimo-tex class=\"arithmatex\">||(slot \\in \\{1, 2, 3\\}||)</marimo-tex>): Ter aula num tempo interm\u00e9dio obriga a que o outro tempo esteja colado imediatamente antes ou imediatamente depois.</span>\n<marimo-tex class=\"arithmatex\">||[y_{slot_s} \\implies (y_{slot_{s-1}} \\lor y_{slot_{s+1}})||]</marimo-tex></li>\n</ol></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "nWHF",
+      "code_hash": "38f15940e5dbb5e5f7da8c7d04e767d6",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "iLit",
+      "code_hash": "ec1873f977c4273297a28fc0b4686de4",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"8-restricao-r5-sem-sobreposicao-de-horario-para-professores\">8. Restri\u00e7\u00e3o R5: Sem Sobreposi\u00e7\u00e3o de Hor\u00e1rio para Professores</h2>\n<span class=\"paragraph\">Para cada professor <marimo-tex class=\"arithmatex\">||(p||)</marimo-tex>, em cada dia e em cada slot, a soma de todas as aulas em que <marimo-tex class=\"arithmatex\">||(p||)</marimo-tex> \u00e9 o professor respons\u00e1vel (considerando todas as turmas, disciplinas atribu\u00eddas e salas) n\u00e3o pode exceder 1:</span>\n<marimo-tex class=\"arithmatex\">||[\\forall_{p \\in \\text{Professores}}, \\, \\forall_{dia \\in \\text{DIAS}}, \\, \\forall_{slot \\in \\text{SLOTS}} \\cdot \\quad \\sum_{d \\in D_p, \\, t, \\, s} x_{t, d, s, dia, slot} \\le 1||]</marimo-tex><span class=\"paragraph\">onde <marimo-tex class=\"arithmatex\">||(D_p||)</marimo-tex> representa o conjunto de disciplinas lecionadas pelo professor <marimo-tex class=\"arithmatex\">||(p||)</marimo-tex>.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ZHCJ",
+      "code_hash": "74822c24f8d05044eb45b09cf1281a89",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ROlb",
+      "code_hash": "000f1ba14c6522f2e2c2a321ec8023ae",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"9-restricao-r6-indisponibilidades-dos-professores\">9. Restri\u00e7\u00e3o R6: Indisponibilidades dos Professores</h2>\n<span class=\"paragraph\">As exce\u00e7\u00f5es e impedimentos de hor\u00e1rio est\u00e3o registados no ficheiro disponibilidade_excecoes.csv.</span>\n<span class=\"paragraph\">Para garantir que nenhum professor \u00e9 colocado num momento de indisponibilidade, for\u00e7amos as vari\u00e1veis bin\u00e1rias correspondentes a zero:</span>\n<marimo-tex class=\"arithmatex\">||[\\forall (p, dia, slot) \\in \\text{Indisponibilidades}, \\, \\forall d \\in D_p, \\, \\forall t, \\, \\forall s \\cdot \\quad x_{t, d, s, dia, slot} = 0||]</marimo-tex><span class=\"paragraph\">Em termos pr\u00e1ticos, se o professor <marimo-tex class=\"arithmatex\">||(p||)</marimo-tex> estiver indispon\u00edvel no <marimo-tex class=\"arithmatex\">||(dia||)</marimo-tex> e <marimo-tex class=\"arithmatex\">||(slot||)</marimo-tex> indicados na tabela de exce\u00e7\u00f5es, qualquer aula associada a esse professor nesse bloco temporal \u00e9 sumariamente proibida.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "qnkX",
+      "code_hash": "d362dc889c4ec30058d72de2c6f164e2",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "TqIu",
+      "code_hash": "d3c381fdbd2e453ec4b23689b5cb1e45",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"10-restricao-r7-compatibilidade-e-capacidade-das-salas-de-aula\">10. Restri\u00e7\u00e3o R7: Compatibilidade e Capacidade das Salas de Aula</h2>\n<span class=\"paragraph\">A regra divide-se em duas partes:</span>\n<ol>\n<li>\n<span class=\"paragraph\">Compatibilidade de Tipo de Sala: Se a disciplina <marimo-tex class=\"arithmatex\">||(d||)</marimo-tex> e a sala <marimo-tex class=\"arithmatex\">||(s||)</marimo-tex> forem incompat\u00edveis (por exemplo, uma disciplina normal numa sala especial, ou vice-versa), a aloca\u00e7\u00e3o \u00e9 proibida:</span>\n<marimo-tex class=\"arithmatex\">||[\\forall (t, d, s, dia, slot) \\text{ incompat\u00edveis} \\cdot \\quad x_{t, d, s, dia, slot} = 0||]</marimo-tex></li>\n<li>\n<span class=\"paragraph\">Capacidade: Em cada instante (<marimo-tex class=\"arithmatex\">||(dia||)</marimo-tex> e <marimo-tex class=\"arithmatex\">||(slot||)</marimo-tex>), o total de aulas a decorrer na sala <marimo-tex class=\"arithmatex\">||(s||)</marimo-tex> n\u00e3o pode ultrapassar a quantidade  dispon\u00edvel <marimo-tex class=\"arithmatex\">||(Q_s||)</marimo-tex> definida em salas.csv:</span>\n<marimo-tex class=\"arithmatex\">||[\\forall_{s \\in \\text{Salas}}, \\, \\forall_{dia \\in \\text{DIAS}}, \\, \\forall_{slot \\in \\text{SLOTS}} \\cdot \\quad \\sum_{t, \\, d} x_{t, d, s, dia, slot} \\le Q_s||]</marimo-tex></li>\n</ol></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Vxnm",
+      "code_hash": "95cef85ca07a6f0342fc610118296357",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "DnEU",
+      "code_hash": "680a3b17ad41587a3ec004c2673ecbc6",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"o1-minimizar-o-numero-total-de-buracos-no-horario-de-cada-professor\">O1. Minimizar o n\u00famero total de \"buracos\" no hor\u00e1rio de cada professor</h1>\n<span class=\"paragraph\">Um buraco \u00e9 um tempo livre, no meio do dia, entre a primeira e a \u00faltima aula desse professor nesse dia.</span>\n<span class=\"paragraph\">A implementa\u00e7\u00e3o deste objetivo divide-se em tr\u00eas etapas:</span>\n<ul>\n<li>Para cada professor e em cada dia, o c\u00f3digo junta todas as aulas que ele d\u00e1 e compara as horas de in\u00edcio e de fim.</li>\n<li>Sempre que o professor tem uma aula mais cedo e outra mais tarde no mesmo dia (com tempos vagos no meio), \u00e9 criado um alerta que s\u00f3 \u00e9 ativado se ambas as aulas acontecerem mesmo.</li>\n<li>O c\u00f3digo conta quantas horas o professor fica a aguardar no meio dessas duas aulas e pede ao solver para minimizar esse total:</li>\n</ul>\n<marimo-tex class=\"arithmatex\">||[\n\\min \\sum_{p, dia, s_1, s_2} \\left( \\text{Existe Buraco}_{p, dia, s_1, s_2} \\times \\text{Horas Vagas no Meio} \\right)\n||]</marimo-tex></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ulZA",
+      "code_hash": "2227c0b3883d672f7d0e8cb378e90ad1",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ecfG",
+      "code_hash": "e932f1de36c5ca80ac589259123796cb",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"execucao-do-solver-cp-sat\">Execu\u00e7\u00e3o do Solver (CP-SAT)</h1>\n<span class=\"paragraph\">Ap\u00f3s a defini\u00e7\u00e3o de todas as vari\u00e1veis, restri\u00e7\u00f5es e objetivos de otimiza\u00e7\u00e3o, o solver CP-SAT procura uma solu\u00e7\u00e3o v\u00e1lida.</span>\n<span class=\"paragraph\">O algoritmo busca encontrar um hor\u00e1rio que satisfa\u00e7a 100% das restri\u00e7\u00f5es obrigat\u00f3rias e minimize as penaliza\u00e7\u00f5es definidas.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Pvdt",
+      "code_hash": "569fc371f7a02144be4527bf94c5b062",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Status: Solu\u00e7\u00e3o Encontrada!\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "ZBYS",
+      "code_hash": "fdbe0ab4b964262dfa1534b222d3d20c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"testes-de-validacao-do-horario\">Testes de Valida\u00e7\u00e3o do Hor\u00e1rio</h1>\n<span class=\"paragraph\">Para ter a certeza de que o programa n\u00e3o cometeu erros, foram criados testes que analisam a solu\u00e7\u00e3o final encontrada pelo solver.</span>\n<span class=\"paragraph\">Estes testes usam a instru\u00e7\u00e3o assert para verificar se todas as regras da escola foram cumpridas.\nSe o c\u00f3digo correr do in\u00edcio ao fim sem dar erros, significa que o hor\u00e1rio est\u00e1 100% correto e aprovado.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "aLJB",
+      "code_hash": "27bf5ce004260593c6060016c82cf8dc",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "\u001b[32m.\u001b[0m\u001b[33m                                                                        [100%]\u001b[0m\n=================================== Overview ===================================\nPassed Tests:\n\u001b[1m\u001b[32m\u001b[22m\u2713\u001b[0m\u001b[0m horario_escolar.py::test_r1\n\nSummary:\nTotal: 1, Passed: 1, Failed: 0, Errors: 0, Skipped: 0\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "nHfw",
+      "code_hash": "ba8d8508628fee67441ecd7a0c6d0b45",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "\u001b[32m.\u001b[0m\u001b[33m                                                                        [100%]\u001b[0m\n=================================== Overview ===================================\nPassed Tests:\n\u001b[1m\u001b[32m\u001b[22m\u2713\u001b[0m\u001b[0m horario_escolar.py::test_r2\n\nSummary:\nTotal: 1, Passed: 1, Failed: 0, Errors: 0, Skipped: 0\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "xXTn",
+      "code_hash": "2cf02920c8c5b1d1eae54342920771a8",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "\u001b[32m.\u001b[0m\u001b[33m                                                                        [100%]\u001b[0m\n=================================== Overview ===================================\nPassed Tests:\n\u001b[1m\u001b[32m\u001b[22m\u2713\u001b[0m\u001b[0m horario_escolar.py::test_r3\n\nSummary:\nTotal: 1, Passed: 1, Failed: 0, Errors: 0, Skipped: 0\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "AjVT",
+      "code_hash": "26aa6d116bb5767a3616b79637c537d3",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "\u001b[32m.\u001b[0m\u001b[33m                                                                        [100%]\u001b[0m\n=================================== Overview ===================================\nPassed Tests:\n\u001b[1m\u001b[32m\u001b[22m\u2713\u001b[0m\u001b[0m horario_escolar.py::test_r4\n\nSummary:\nTotal: 1, Passed: 1, Failed: 0, Errors: 0, Skipped: 0\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "pHFh",
+      "code_hash": "2fd83c2d4fcce334407d9069d759ebbf",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "\u001b[32m.\u001b[0m\u001b[33m                                                                        [100%]\u001b[0m\n=================================== Overview ===================================\nPassed Tests:\n\u001b[1m\u001b[32m\u001b[22m\u2713\u001b[0m\u001b[0m horario_escolar.py::test_r5\n\nSummary:\nTotal: 1, Passed: 1, Failed: 0, Errors: 0, Skipped: 0\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "NCOB",
+      "code_hash": "d3b7a26acfc0c2b40c655a7de986fe5e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "\u001b[32m.\u001b[0m\u001b[33m                                                                        [100%]\u001b[0m\n=================================== Overview ===================================\nPassed Tests:\n\u001b[1m\u001b[32m\u001b[22m\u2713\u001b[0m\u001b[0m horario_escolar.py::test_r6\n\nSummary:\nTotal: 1, Passed: 1, Failed: 0, Errors: 0, Skipped: 0\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "aqbW",
+      "code_hash": "7efd0fef281c6aa52fe0438c2b4a7798",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "\u001b[32m.\u001b[0m\u001b[33m                                                                        [100%]\u001b[0m\n=================================== Overview ===================================\nPassed Tests:\n\u001b[1m\u001b[32m\u001b[22m\u2713\u001b[0m\u001b[0m horario_escolar.py::test_r7\n\nSummary:\nTotal: 1, Passed: 1, Failed: 0, Errors: 0, Skipped: 0\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "TRpd",
+      "code_hash": "6dab0755f8f5218efe2389cbeee1dad8",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "\u001b[32m.\u001b[0m\u001b[33m                                                                        [100%]\u001b[0m\n=================================== Overview ===================================\nPassed Tests:\n\u001b[1m\u001b[32m\u001b[22m\u2713\u001b[0m\u001b[0m horario_escolar.py::test_r8\n\nSummary:\nTotal: 1, Passed: 1, Failed: 0, Errors: 0, Skipped: 0\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "TXez",
+      "code_hash": "3b670d9be3f23972ecf6b69b788a1b18",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"visualizacao-do-horario\">Visualiza\u00e7\u00e3o do Hor\u00e1rio</h1>\n<span class=\"paragraph\">Esta sec\u00e7\u00e3o pega no resultado final do solver e transforma-o numa tabela f\u00e1cil de consultar.</span>\n<span class=\"paragraph\">Com os menus interativos, \u00e9 poss\u00edvel:</span>\n<ul>\n<li>Escolher o modo de vista (ver o hor\u00e1rio por Turma ou por Professor).</li>\n<li>Filtrar a informa\u00e7\u00e3o (selecionar a turma ou professor desejado no menu de sele\u00e7\u00e3o).</li>\n<li>Consultar a grelha (ver as aulas organizadas por dias da semana e tempos letivos, com indica\u00e7\u00e3o da disciplina, sala e professor).</li>\n</ul></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "dNNg",
+      "code_hash": "013c0d3994ba9aaeabaac2b9be2cb00e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "yCnT",
+      "code_hash": "e3aa8a9738fae2003fa8afb6f8fef2d4",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<div style='display: flex;flex: 1;flex-direction: row;justify-content: space-between;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><marimo-ui-element object-id='yCnT-0' random-id='2fd3f3fa-8232-a929-1310-a168af2f9da1'><marimo-dropdown data-initial-value='[&quot;Turma&quot;]' data-label='&quot;&#92;u003cspan class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&#92;u003e&#92;u003cspan class=&#92;&quot;paragraph&#92;&quot;&#92;u003eVer por:&#92;u003c/span&#92;u003e&#92;u003c/span&#92;u003e&quot;' data-options='[&quot;Turma&quot;,&quot;Professor&quot;]' data-allow-select-none='false' data-searchable='false' data-full-width='false' data-disabled='false'></marimo-dropdown></marimo-ui-element><marimo-ui-element object-id='yCnT-1' random-id='0d610407-8691-c233-74f6-f569f9a37f67'><marimo-dropdown data-initial-value='[&quot;7\u00baA&quot;]' data-label='&quot;&#92;u003cspan class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&#92;u003e&#92;u003cspan class=&#92;&quot;paragraph&#92;&quot;&#92;u003eTurma:&#92;u003c/span&#92;u003e&#92;u003c/span&#92;u003e&quot;' data-options='[&quot;7\u00baA&quot;,&quot;7\u00baB&quot;]' data-allow-select-none='false' data-searchable='false' data-full-width='false' data-disabled='false'></marimo-dropdown></marimo-ui-element><marimo-ui-element object-id='yCnT-2' random-id='b9b8ea44-311f-a9d6-bad6-daa907a34716'><marimo-dropdown data-initial-value='[&quot;Prof. Ana&quot;]' data-label='&quot;&#92;u003cspan class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&#92;u003e&#92;u003cspan class=&#92;&quot;paragraph&#92;&quot;&#92;u003eProfessor:&#92;u003c/span&#92;u003e&#92;u003c/span&#92;u003e&quot;' data-options='[&quot;Prof. Ana&quot;,&quot;Prof. Bruno&quot;,&quot;Prof. Carla&quot;,&quot;Prof. Diana&quot;,&quot;Prof. Eduardo&quot;]' data-allow-select-none='false' data-searchable='false' data-full-width='false' data-disabled='false'></marimo-dropdown></marimo-ui-element></div>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "wlCL",
+      "code_hash": "c1b2805328492a9d8ba3846b189ad489",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"horario-da-turma-7ob\">Hor\u00e1rio da Turma: <code>7\u00baB</code> <table border=\"1\" class=\"dataframe table table-bordered table-hover\"></h3>\n<thead>\n    <tr style=\"text-align: right;\">\n      <th>dia</th>\n      <th>0</th>\n      <th>1</th>\n      <th>2</th>\n      <th>3</th>\n      <th>4</th>\n    </tr>\n    <tr>\n      <th>periodo</th>\n      <th></th>\n      <th></th>\n      <th></th>\n      <th></th>\n      <th></th>\n    </tr>\n  </thead>\n<tbody>\n    <tr>\n      <th>0</th>\n      <td><b>Educa\u00e7\u00e3o F\u00edsica</b><br><small> Gin\u00e1sio<br> Prof. Eduardo</small></td>\n      <td><b>Matem\u00e1tica</b><br><small> Sala Normal<br> Prof. Ana</small></td>\n      <td><b>Ci\u00eancias</b><br><small> Laborat\u00f3rio<br> Prof. Carla</small></td>\n      <td>-</td>\n      <td>-</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td><b>Educa\u00e7\u00e3o F\u00edsica</b><br><small> Gin\u00e1sio<br> Prof. Eduardo</small></td>\n      <td><b>Ci\u00eancias</b><br><small> Laborat\u00f3rio<br> Prof. Carla</small></td>\n      <td><b>Matem\u00e1tica</b><br><small> Sala Normal<br> Prof. Ana</small></td>\n      <td><b>Matem\u00e1tica</b><br><small> Sala Normal<br> Prof. Ana</small></td>\n      <td>-</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td><b>Matem\u00e1tica</b><br><small> Sala Normal<br> Prof. Ana</small></td>\n      <td><b>Portugu\u00eas</b><br><small> Sala Normal<br> Prof. Bruno</small></td>\n      <td>-</td>\n      <td><b>Ingl\u00eas</b><br><small> Sala Normal<br> Prof. Diana</small></td>\n      <td><b>Ingl\u00eas</b><br><small> Sala Normal<br> Prof. Diana</small></td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td><b>Hist\u00f3ria</b><br><small> Sala Normal<br> Prof. Diana</small></td>\n      <td><b>Hist\u00f3ria</b><br><small> Sala Normal<br> Prof. Diana</small></td>\n      <td><b>Portugu\u00eas</b><br><small> Sala Normal<br> Prof. Bruno</small></td>\n      <td><b>Ci\u00eancias</b><br><small> Laborat\u00f3rio<br> Prof. Carla</small></td>\n      <td>-</td>\n    </tr>\n    <tr>\n      <th>4</th>\n      <td><b>Portugu\u00eas</b><br><small> Sala Normal<br> Prof. Bruno</small></td>\n      <td>-</td>\n      <td>-</td>\n      <td>-</td>\n      <td><b>Portugu\u00eas</b><br><small> Sala Normal<br> Prof. Bruno</small></td>\n    </tr>\n  </tbody>\n</table></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Krip",
+      "code_hash": "050c87140266b9aa573c4167bb795760",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"utilizacao-de-ferramentas-llm\">Utiliza\u00e7\u00e3o de Ferramentas LLM</h1>\n<span class=\"paragraph\">O modelo de linguagem foi utilizado no esclarecimento de d\u00favidas,e no desenvolvimento da interface visual em Marimo.</span>\n<ul>\n<li>Hist\u00f3rico de Di\u00e1logo: <a href=\"https://claude.ai/share/bb4fa134-8e12-4b37-ba92-3bc664ed204a\" rel=\"noopener noreferrer\" target=\"_blank\">Aceder ao Di\u00e1logo LLM</a></li>\n</ul></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "qNfe",
+      "code_hash": "5521ba7c8c6a47d32c23dc2954501096",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"trabalho-realizado-por\">Trabalho realizado por:</h1>\n<span class=\"paragraph\">F\u00e1bio Miguel Costa Reis A109746</span>\n<span class=\"paragraph\">Wu Hou Pan A109381</span></span>"
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}
